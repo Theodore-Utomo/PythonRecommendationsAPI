@@ -9,20 +9,19 @@ from flask_cors import CORS
 
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)  
 
-# Load and preprocess the dataset
 df = pd.read_csv('YELP.Restaurants.csv')
 df = df[["restaurant_name", "restaurant_tag", "rating", "price", "restaurant_neighborhood", "restaurant_address"]]
 df['restaurant_tag'].fillna("No Tag", inplace=True)
 
-# Convert price ranges to numerical values
+# Map price ranges to numerical values
 price_mapping = {'$ ': 1, '$$ ': 2, '$$$ ': 3, '$$$$ ': 4}
 df['price'] = df['price'].map(price_mapping)
 df['price'].fillna(df['price'].mean(), inplace=True)
 df['rating'].fillna(df['rating'].mean(), inplace=True)
 
-# Prepare TF-IDF similarity based on tags
+# Preparing for similarity calculations
 feature = df["restaurant_tag"].tolist()
 tfidf = TfidfVectorizer(stop_words="english")
 tfidf_matrix = tfidf.fit_transform(feature)
@@ -34,7 +33,7 @@ df[['rating', 'price']] = scaler.fit_transform(df[['rating', 'price']]) * 10
 df['price'].fillna(df['price'].mean(), inplace=True)
 df['rating'].fillna(df['rating'].mean(), inplace=True)
 
-# Calculate cosine similarity for rating and price
+# Calculate similarity for rating and price
 rating_similarity = cosine_similarity(df[['rating']])
 price_similarity = cosine_similarity(df[['price']])
 
@@ -62,7 +61,6 @@ def get_recommendations(name):
     recommendations = df[['restaurant_name', 'rating', 'price', 'restaurant_neighborhood', 'restaurant_address']].iloc[restaurant_indices]
     return recommendations.to_dict(orient='records')
 
-# Define a route to get recommendations
 @app.route('/recommend', methods=['GET'])
 def recommend():
     restaurant_name = request.args.get('name')
